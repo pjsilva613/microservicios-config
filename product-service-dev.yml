@@ -1,0 +1,67 @@
+server:
+  port: ${CUSTOM.SERVER.PORT:9002}
+
+### Eureka Client configuration
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-expiration-duration-in-seconds: 30
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA.HOST.SERVER:http://localhost:8761/eureka}
+    registerWithEureka: true
+    fetchRegistry: true
+    healthcheck:
+      enabled: true
+    refresh:
+      enable: true
+
+### Actuator info (/actuator/info)
+info:
+  app:
+    name: Product Service Microservice
+    description: Microservicio para el crud de los productos
+    version: 1.0
+
+### Mongo database configuration
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: mitocode
+      uri: ${MONGODB.CONNECTION.URL:mongodb://mitocode:mitocode@localhost:27017}
+      authentication-database: admin
+  #webflux:
+  #  base-path: '/product-service/v1'
+
+kafka:
+  mitocode:
+    topic: ${KAFKA.TOPIC:mitocode}
+    server: 127.0.0.1
+    port: 9092
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+      base-path: /actuator
+  info:
+    env:
+      enabled: true
+
+#OpenAPI Configuration
+
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# URL for OpenAPI:
+# http://localhost:9002/swagger-ui.html
+# http://localhost:9002/api-docs
+# http://localhost:9002/api-docs.yaml

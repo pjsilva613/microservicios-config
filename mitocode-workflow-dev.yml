@@ -1,0 +1,40 @@
+server:
+  port: ${CUSTOM.SERVER.PORT:3000}
+
+### Eureka Client configuration
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-expiration-duration-in-seconds: 30
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA.HOST.SERVER:http://localhost:8761/eureka}
+    registerWithEureka: true
+    fetchRegistry: true
+    healthcheck:
+      enabled: true
+    refresh:
+      enable: true
+
+### Actuator info (/actuator/info)
+info:
+  app:
+    name: Workflow Service Microservice
+    description: Microservicio para la gestión de los workflows
+    version: 1.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+      base-path: /actuator
+  info:
+    env:
+      enabled: true
+
+temporal:
+  mitocode:
+    hostname: 127.0.0.1:7233
+    namespace: default
+    queue: mitocode

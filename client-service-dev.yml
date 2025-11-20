@@ -1,0 +1,55 @@
+server:
+  port: ${CUSTOM.SERVER.PORT:9001}
+
+### Actuator info (/actuator/info)
+info:
+  app:
+    app-name: Client Service Microservice Desarrollo
+    description: Microservicio para el consumo de los servicios producto-service, user-service y shop-service
+    version: 1.0
+
+### CircuitBreaker Configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      customProductService:
+        slidingWindowSize: 20
+        failureRateThreshold: 70
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 10
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 70
+    instances:
+      product-service:
+        base-config: customProductService
+
+### Eureka Client configuration
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-expiration-duration-in-seconds: 30
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA.HOST.SERVER:http://localhost:8761/eureka/}
+    registerWithEureka: true
+    fetchRegistry: true
+    healthcheck:
+      enabled: true
+    refresh:
+      enable: true
+
+management:
+  auditevents:
+    enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+      base-path: /actuator
+  endpoint:
+    health:
+      group:
+        custom:
+          include: diskSpace, ping, memory, mem
+          show-component: always
+          show-details: always

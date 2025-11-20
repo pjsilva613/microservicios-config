@@ -1,0 +1,114 @@
+---
+server:
+  port: ${CUSTOM.SERVER.PORT:8090}
+resilience4j:
+  circuitbreaker:
+    configs:
+      customConfig:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 10
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+      customConfig2:
+        sliding-window-size: 50
+        failure-rate-threshold: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 10
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+    instances:
+      product-service-cb:
+        base-config: customConfig
+      user-service-cb:
+        base-config: customConfig2
+  timelimiter:
+    configs:
+      customConfig:
+        timeout-duration: 1s
+      customConfig2:
+        timeout-duration: 10s
+    instances:
+      product-service-cb:
+        base-config: customConfig
+      user-service-cb:
+        base-config: customConfig2
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-expiration-duration-in-seconds: 30
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA.HOST.SERVER:http://localhost:8761/eureka}
+    registerWithEureka: true
+    fetchRegistry: true
+    healthcheck:
+      enabled: true
+    refresh:
+      enable: true
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/product-command/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: product-service-cb
+                statusCodes: 500, 404, 403, 401
+            - StripPrefix=2
+
+        - id: product-query-service
+          uri: lb://product-query-service
+          predicates:
+            - Path=/api/product-query/**
+            - Weight=product-group, 20
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: product-service-cb
+                statusCodes: 500, 404, 403, 401
+            - StripPrefix=2
+
+        - id: product-query-service-v2
+          uri: lb://product-query-service-v2
+          predicates:
+            - Path=/api/product-query/**
+            - Weight=product-group, 80
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: product-service-cb
+                statusCodes: 500, 404, 403, 401
+            - StripPrefix=2
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=2
+        - id: authentication-server
+          uri: lb://authentication-server-jwt
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=2
+config:
+  security:
+    privateKey: 2605f66d54d843b33263ac196066b036c877eb31336b531706afee45a235331720311da58d61764ddea76d3174b78e2a1724087206e071d1fff6eae1f462b404c0548e2a025475042df81182d3c0af4be355077cc8649f6937afd42aa7f4a01233745e169f82a49855ad9ecbe10738c00ac6b4fd2cab66e1b6c26b54ea0e8e28
+info:
+  app:
+    app-name: Cloud Gateway Microservice
+    description: Microservicio para el ruteo de los microservicios
+    version: 1
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      base-path: /actuator
